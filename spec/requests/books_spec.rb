@@ -2,10 +2,14 @@ require 'rails_helper'
 
 describe 'Books API', type: :request do
   describe 'GET /books' do
+    let(:first_author) { FactoryBot.create(:author, first_name: 'Christian', last_name: 'Romero', age:  42)} 
+    let(:second_author) { FactoryBot.create(:author, first_name: 'Iliana', last_name: 'Duron', age:  41) }
+
     before do
-      FactoryBot.create(:book, title: '1984', author: 'George Orwell')
-      FactoryBot.create(:book, title: 'The Time Machine', author: 'H.G Wells')
+      FactoryBot.create(:book, title: '1984', author: first_author)
+      FactoryBot.create(:book, title: 'The Time Machine', author: second_author)
     end
+
     it 'returns all books' do
       get '/api/v1/books'
 
@@ -17,10 +21,20 @@ describe 'Books API', type: :request do
   describe 'POST /books' do
     it 'create a new book' do
       expect {
-        post '/api/v1/books', params: { book: {title: 'The Martrix', author: 'Lana Wachowski'}}
+        post '/api/v1/books', params: { 
+          book: {title: 'The Matrix'},
+          author: { first_name: 'Lana', last_name: 'Wachowski', age: 56}
+        }
       }.to change { Book.count }.from(0).to(1)
 
       expect(response).to have_http_status(:created)
+      expect(Author.count).to eq(1)
+      expect(JSON.parse(response.body)).to eq(
+        'id'=> 1,
+        'title'=> 'The Matrix',
+        'author_name'=> 'Lana Wachowski',
+        'author_age' => 56 
+      )
 
     end
   end
